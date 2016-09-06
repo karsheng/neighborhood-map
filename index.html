@@ -3,8 +3,24 @@
   <head>
     <meta charset="utf-8">
     <title>Neighborhood Map</title>
+    <style media="screen">
+      #map {
+        height: 500px;
+      }
+    </style>
   </head>
   <body>
+    <h1>List</h1>
+    <ul id="place-list">
 
+    </ul>
+    <h1>Map</h1>
+    <div id="map" class="">
+
+    </div>
+
+    <script src="js/app.js" charset="utf-8"></script>
+    <script src="js/lib/knockout-3.4.0.js" charset="utf-8"></script>
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDuoB62jzCkrFV9NVlNHj5cZTvXvjJAdbk&callback=initMap" async defer></script>
   </body>
 </html>
