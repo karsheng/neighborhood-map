@@ -46,11 +46,17 @@
           <input id="places-search" type="text" placeholder="Ex: Pizza delivery in NYC">
           <input id="go-places" type="button" value="Go">
         </div>
+        <div class="">
+          <span>List</span>
+          <ul id="place-list" data-bind="foreach: placeList">
+            <li data-bind="text: name, click: $parent.placeListClicked"></li>
+          </ul>
+        </div>
       </div>
       <div id="map"></div>
     </div>
-    <script src="js/app.js" charset="utf-8"></script>
     <script src="js/lib/knockout-3.4.0.js" charset="utf-8"></script>
+    <script src="js/app.js" charset="utf-8"></script>
     <script src="https://maps.googleapis.com/maps/api/js?libraries=places,geometry,drawing&key=AIzaSyDuoB62jzCkrFV9NVlNHj5cZTvXvjJAdbk&v=3&callback=initMap" async defer></script>
   </body>
 </html>

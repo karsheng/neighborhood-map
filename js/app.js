@@ -1,3 +1,34 @@
+// Knockout Part
+var Place = function() {
+
+  this.name = ko.observable();
+  this.formattedAddress = ko.observable();
+  this.marker = "";
+  // self.fullName = ko.computed(function() {
+  //   return self.placeName() + " " + self.formattedAddress();
+  // });
+};
+
+var ViewModel = function() {
+  var self = this;
+
+  this.placeList = ko.observableArray([]);
+
+  this.placeListClicked = function() {
+    var order = self.placeList().indexOf(this);
+    var selectedPlace = self.placeList()[order];
+    var placeInfoWindow = new google.maps.InfoWindow();
+    getPlacesDetails(selectedPlace.marker, placeInfoWindow);
+  };
+};
+
+var model = new ViewModel();
+
+ko.applyBindings(model);
+
+var dummyPlaces = [];
+
+// Google Maps Part
 var map;
 
 // Create a new blank array for all the listing markers.
@@ -498,6 +529,9 @@ function textSearchPlaces() {
 // This function creates markers for each place found in either places search.
 function createMarkersForPlaces(places) {
   var bounds = new google.maps.LatLngBounds();
+
+  model.placeList.removeAll();
+
   for (var i = 0; i < places.length; i++) {
     var place = places[i];
     var icon = {
@@ -515,6 +549,9 @@ function createMarkersForPlaces(places) {
       position: place.geometry.location,
       id: place.place_id
     });
+
+    //get places names for listview
+    getPlacesNames(marker, place);
 
     // Create a single infowindow to be used with the place details information
     // so that only one is open at once.
@@ -536,6 +573,22 @@ function createMarkersForPlaces(places) {
     }
   }
   map.fitBounds(bounds);
+}
+// get places names for list
+function getPlacesNames(marker, place) {
+  var placeOfInterest = new Place();
+
+  if (place.name) {
+    placeOfInterest.name = place.name;
+  }
+  if (place.formatted_address) {
+    placeOfInterest.formattedAddress = place.formatted_address;
+  }
+
+  placeOfInterest.marker = marker;
+
+  model.placeList.push(placeOfInterest);
+
 }
 
 // This is the PLACE DETAILS search - it's the most detailed so it's only
@@ -568,6 +621,12 @@ service.getDetails({
           place.opening_hours.weekday_text[4] + '<br>' +
           place.opening_hours.weekday_text[5] + '<br>' +
           place.opening_hours.weekday_text[6];
+
+          if (place.opening_hours.open_now) {
+            innerHTML += '<br><p>Open Now</p>';
+          } else {
+            innerHTML += '<br><p>Closed</p>';
+          }
     }
     if (place.photos) {
       innerHTML += '<br><br><img src="' + place.photos[0].getUrl(
