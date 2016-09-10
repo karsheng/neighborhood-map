@@ -612,7 +612,7 @@ function createMarkersForPlaces(places) {
 // get places names for list
 function getPlacesNames(marker, place) {
   var placeOfInterest = new Place();
-
+  var openNow = place.opening_hours;
   if (place.name) {
     placeOfInterest.name = place.name;
   }
@@ -620,8 +620,10 @@ function getPlacesNames(marker, place) {
     placeOfInterest.formattedAddress = place.formatted_address;
   }
 
-  if (place.opening_hours.open_now) {
-    placeOfInterest.openNow(true);
+  if (typeof openNow!== 'undefined') {
+    if (openNow.open_now) {
+        placeOfInterest.openNow(true);
+    }
   }
   placeOfInterest.marker = marker;
 
