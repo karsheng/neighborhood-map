@@ -68,6 +68,7 @@ var ViewModel = function() {
     if (selectedPlace.placeInfoWindow.marker == selectedPlace.marker) {
       console.log("This infowindow already is on this marker!");
     } else {
+      bounceMarker(selectedPlace.marker, 2000);
       getPlacesDetails(selectedPlace.marker, selectedPlace.placeInfoWindow);
     }
   };
@@ -303,7 +304,7 @@ function createMarkersForPlaces(places) {
       size: new google.maps.Size(35, 35),
       origin: new google.maps.Point(0, 0),
       anchor: new google.maps.Point(15, 34),
-      scaledSize: new google.maps.Size(25, 25)
+      scaledSize: new google.maps.Size(35, 35)
     };
     // Create a marker for each place.
     var marker = new google.maps.Marker({
@@ -322,6 +323,7 @@ function createMarkersForPlaces(places) {
       if (placeInfoWindow.marker == this) {
         console.log("This infowindow already is on this marker!");
       } else {
+        bounceMarker(this, 2000);
         getPlacesDetails(this, placeInfoWindow);
       }
     });
@@ -420,4 +422,12 @@ function getPlacesDetails(marker, infowindow) {
       });
     }
   });
+}
+
+// bounce marker with timeout
+function bounceMarker(marker, timeout) {
+  marker.setAnimation(google.maps.Animation.BOUNCE);
+  window.setTimeout(function() {
+    marker.setAnimation(null)
+  }, timeout);
 }
