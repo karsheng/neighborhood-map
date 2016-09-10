@@ -4,6 +4,8 @@ var Place = function() {
   this.name = ko.observable();
   this.formattedAddress = ko.observable();
   this.marker = "";
+  this.openNow = ko.observable(false);
+  this.show = ko.observable(true);
   // self.fullName = ko.computed(function() {
   //   return self.placeName() + " " + self.formattedAddress();
   // });
@@ -19,6 +21,31 @@ var ViewModel = function() {
     var selectedPlace = self.placeList()[order];
     var placeInfoWindow = new google.maps.InfoWindow();
     getPlacesDetails(selectedPlace.marker, placeInfoWindow);
+  };
+
+  // if the openNow checkbox is checked, the openNow function is triggered
+  this.openNowIsChecked = ko.observable();
+  this.openNowIsChecked.subscribe(function(newValue){
+      this.showOpenNow(newValue);
+  }, this);
+
+  // triggered when the openNow checkbox is checked/unchecked
+  // when checked, hides the associated items and markers for the places that are currently closed
+  // when unchecked, shows all items and markers
+  this.showOpenNow = function(value) {
+    if (value) {
+      ko.utils.arrayForEach(this.placeList(), function(place) {
+        if (!place.openNow()) {
+          place.show(false);
+          hideMarker(place.marker);
+        }
+      });
+    } else {
+      ko.utils.arrayForEach(this.placeList(), function(place) {
+        place.show(true);
+        showMarker(place.marker);
+      });
+    }
   };
 };
 
@@ -306,6 +333,14 @@ function hideMarkers(markers) {
     markers[i].setMap(null);
   }
 }
+// this function hides a marker
+function hideMarker(marker) {
+  marker.setMap(null);
+}
+// this function displays a marker on the map
+function showMarker(marker) {
+  marker.setMap(map);
+}
 
 // This function takes in a COLOR, and then creates a new marker
 // icon of that color. The icon will be 21 px wide by 34 high, have an origin
@@ -585,6 +620,9 @@ function getPlacesNames(marker, place) {
     placeOfInterest.formattedAddress = place.formatted_address;
   }
 
+  if (place.opening_hours.open_now) {
+    placeOfInterest.openNow(true);
+  }
   placeOfInterest.marker = marker;
 
   model.placeList.push(placeOfInterest);
@@ -627,6 +665,12 @@ service.getDetails({
           } else {
             innerHTML += '<br><p>Closed</p>';
           }
+    }
+    if (place.price_Level) {
+      innerHTML += '<br>' + place.price_Level;
+    }
+    if (place.rating) {
+      innerHTML += '<br>' + place.rating;
     }
     if (place.photos) {
       innerHTML += '<br><br><img src="' + place.photos[0].getUrl(

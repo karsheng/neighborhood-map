@@ -46,10 +46,24 @@
           <input id="places-search" type="text" placeholder="Ex: Pizza delivery in NYC">
           <input id="go-places" type="button" value="Go">
         </div>
+        <div>
+          <span class="text">Open Now</span>
+          <input id="open-now-checkbox" type="checkbox" name="name" value="" data-bind="checked: openNowIsChecked">
+          <br>
+          <span class="text">Price Level</span>
+          <select id="price-filter">
+            <option value="null">None</option>
+            <option value=0>Free</option>
+            <option value=1>Inexpensive</option>
+            <option value=2>Moderate</option>
+            <option value=3>Expensive</option>
+            <option value=4>Very Expensive</option>
+          </select>
+        </div>
         <div class="">
           <span>List</span>
           <ul id="place-list" data-bind="foreach: placeList">
-            <li data-bind="text: name, click: $parent.placeListClicked"></li>
+            <li data-bind="text: name, click: $parent.placeListClicked, visible: show"></li>
           </ul>
         </div>
       </div>
