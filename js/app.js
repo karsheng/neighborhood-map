@@ -1,20 +1,61 @@
 // Knockout Part
 var Place = function() {
 
-  this.name = ko.observable();
+  this.title = ko.observable();
   this.formattedAddress = ko.observable();
   this.marker = "";
   this.openNow = ko.observable(false);
   this.show = ko.observable(true);
   this.rating = 0;
+  this.placeInfoWindow = "";
   // self.fullName = ko.computed(function() {
   //   return self.placeName() + " " + self.formattedAddress();
   // });
 };
 
-var intialPlaces = {
+var initialPlaces = [
+  {
+    icon: "https://maps.gstatic.com/mapfiles/place_api/icons/restaurant-71.png",
+    name: "Best Pizza",
+    geometry: {
+      location: {lat: 40.71557980000001, lng: -73.95341229999997}
+    },
+    place_id: "ChIJzWhpTVlZwokRRyrw-O4FIxI"
+  },
+  {
+    icon:"https://maps.gstatic.com/mapfiles/place_api/icons/restaurant-71.png",
+    name: "Joe's Pizza",
+    geometry: {
+      location: {lat: 40.730559, lng: -74.00216799999998}
+    },
+    place_id: "ChIJ8Q2WSpJZwokRQz-bYYgEskM"
+  },
+  {
+    icon:"https://maps.gstatic.com/mapfiles/place_api/icons/restaurant-71.png",
+    name: "Lombardi's Pizza",
+    geometry: {
+      location: {lat: 40.72153319999999, lng: -73.99563440000003}
+    },
+    place_id: "ChIJp-cWE4pZwokRmUI8_BIF8dg"
+  },
+  {
+    icon:"https://maps.gstatic.com/mapfiles/place_api/icons/restaurant-71.png",
+    name: "John's of Times Square",
+    geometry: {
+      location: {lat: 40.7582256, lng: -73.98837789999999}
+    },
+    place_id: "ChIJBSESh1RYwokRyHcVnrG7JWo"
+  },
+  {
+    icon:"https://maps.gstatic.com/mapfiles/place_api/icons/restaurant-71.png",
+    name: "Angelo's Coal Oven Pizzeria",
+    geometry: {
+      location: {lat: 40.7648918, lng: -73.97797450000002}
+    },
+    place_id: "ChIJVTtHRfdYwokRnbMmdpG2Mw0"
+  }
 
-};
+];
 
 var ViewModel = function() {
   var self = this;
@@ -24,8 +65,11 @@ var ViewModel = function() {
   this.placeListClicked = function() {
     var order = self.placeList().indexOf(this);
     var selectedPlace = self.placeList()[order];
-    var placeInfoWindow = new google.maps.InfoWindow();
-    getPlacesDetails(selectedPlace.marker, placeInfoWindow);
+    if (selectedPlace.placeInfoWindow.marker == selectedPlace.marker) {
+      console.log("This infowindow already is on this marker!");
+    } else {
+      getPlacesDetails(selectedPlace.marker, selectedPlace.placeInfoWindow);
+    }
   };
 
   // filter allows to show only currently open places and equal to or above selected ratings
@@ -241,7 +285,7 @@ function initMap() {
       this.setIcon(defaultIcon);
     });
   }
-  document.getElementById('show-listings').addEventListener('click', showListings);
+  document.getElementById('show-listings').addEventListener('click', showPlaces);
 
   document.getElementById('hide-listings').addEventListener('click', function() {
     hideMarkers(markers);
@@ -290,6 +334,8 @@ function initMap() {
     polygon.getPath().addListener('set_at', searchWithinPolygon);
     polygon.getPath().addListener('insert_at', searchWithinPolygon);
   });
+  createMarkersForPlaces(initialPlaces);
+  showPlaces();
 }
 
 // This function populates the infowindow when the marker is clicked. We'll only allow
@@ -345,6 +391,16 @@ function showListings() {
   for (var i = 0; i < markers.length; i++) {
     markers[i].setMap(map);
     bounds.extend(markers[i].position);
+  }
+  map.fitBounds(bounds);
+}
+
+function showPlaces() {
+  var bounds = new google.maps.LatLngBounds();
+  // Extend the boundaries of the map for each marker and display the marker
+  for (var i = 0; i < placeMarkers.length; i++) {
+    placeMarkers[i].setMap(map);
+    bounds.extend(placeMarkers[i].position);
   }
   map.fitBounds(bounds);
 }
@@ -471,55 +527,6 @@ function searchWithinTime() {
   }
 }
 
-// This function will go through each of the results, and,
-// if the distance is LESS than the value in the picker, show it on the map.
-function displayMarkersWithinTime(response) {
-  var maxDuration = document.getElementById('max-duration').value;
-  var origins = response.originAddresses;
-  var destinations = response.destinationAddresses;
-  // Parse through the results, and get the distance and duration of each.
-  // Because there might be  multiple origins and destinations we have a nested loop
-  // Then, make sure at least 1 result was found.
-  var atLeastOne = false;
-  for (var i = 0; i < origins.length; i++) {
-    var results = response.rows[i].elements;
-    for (var j = 0; j < results.length; j++) {
-      var element = results[j];
-      if (element.status === "OK") {
-        // The distance is returned in feet, but the TEXT is in miles. If we wanted to switch
-        // the function to show markers within a user-entered DISTANCE, we would need the
-        // value for distance, but for now we only need the text.
-        var distanceText = element.distance.text;
-        // Duration value is given in seconds so we make it MINUTES. We need both the value
-        // and the text.
-        var duration = element.duration.value / 60;
-        var durationText = element.duration.text;
-        if (duration <= maxDuration) {
-          //the origin [i] should = the markers[i]
-          markers[i].setMap(map);
-          atLeastOne = true;
-          // Create a mini infowindow to open immediately and contain the
-          // distance and duration
-          var infowindow = new google.maps.InfoWindow({
-            content: durationText + ' away, ' + distanceText +
-              '<div><input type=\"button\" value=\"View Route\" onclick =' +
-              '\"displayDirections(&quot;' + origins[i] + '&quot;);\"></input></div>'
-          });
-          infowindow.open(map, markers[i]);
-          // Put this in so that this small window closes if the user clicks
-          // the marker, when the big infowindow opens
-          markers[i].infowindow = infowindow;
-          google.maps.event.addListener(markers[i], 'click', function() {
-            this.infowindow.close();
-          });
-        }
-      }
-    }
-  }
-  if (!atLeastOne) {
-    window.alert('We could not find any locations within that distance!');
-  }
-}
 
 // This function is in response to the user selecting "show route" on one
 // of the markers within the calculated distance. This will display the route
@@ -586,7 +593,9 @@ function textSearchPlaces() {
 // This function creates markers for each place found in either places search.
 function createMarkersForPlaces(places) {
   var bounds = new google.maps.LatLngBounds();
-
+  // Create a single infowindow to be used with the place details information
+  // so that only one is open at once.
+  var placeInfoWindow = new google.maps.InfoWindow();
   model.placeList.removeAll();
 
   for (var i = 0; i < places.length; i++) {
@@ -608,11 +617,8 @@ function createMarkersForPlaces(places) {
     });
 
     //get places names for listview
-    getPlacesNames(marker, place);
+    getPlacesNames(marker, placeInfoWindow, place);
 
-    // Create a single infowindow to be used with the place details information
-    // so that only one is open at once.
-    var placeInfoWindow = new google.maps.InfoWindow();
     // If a marker is clicked, do a place details search on it in the next function.
     marker.addListener('click', function() {
       if (placeInfoWindow.marker == this) {
@@ -626,7 +632,9 @@ function createMarkersForPlaces(places) {
       // Only geocodes have viewport.
       bounds.union(place.geometry.viewport);
     } else {
-      bounds.extend(place.geometry.location);
+      if (typeof place.geometry.location.lat === 'function') {
+        bounds.extend(place.geometry.location);
+      }
     }
   }
   map.fitBounds(bounds);
@@ -634,16 +642,16 @@ function createMarkersForPlaces(places) {
   // model.filter(model.openNowIsChecked(), model.selectedRating());
 }
 // get places names for list
-function getPlacesNames(marker, place) {
+function getPlacesNames(marker, infoWindow, place) {
   var placeOfInterest = new Place();
   var openNow = place.opening_hours;
   if (place.name) {
-    placeOfInterest.name = place.name;
+    placeOfInterest.title = place.name;
   }
   if (place.formatted_address) {
     placeOfInterest.formattedAddress = place.formatted_address;
   }
-  if (typeof openNow!== 'undefined') {
+  if (typeof openNow !== 'undefined') {
     if (openNow.open_now) {
         placeOfInterest.openNow(true);
     }
@@ -652,8 +660,8 @@ function getPlacesNames(marker, place) {
     placeOfInterest.rating = place.rating;
   }
 
+  placeOfInterest.placeInfoWindow = infoWindow;
   placeOfInterest.marker = marker;
-
   model.placeList.push(placeOfInterest);
 
 }
@@ -662,56 +670,56 @@ function getPlacesNames(marker, place) {
 // executed when a marker is selected, indicating the user wants more
 // details about that place.
 function getPlacesDetails(marker, infowindow) {
-var service = new google.maps.places.PlacesService(map);
-service.getDetails({
-  placeId: marker.id
-}, function(place, status) {
-  if (status === google.maps.places.PlacesServiceStatus.OK) {
-    // Set the marker property on this infowindow so it isn't created again.
-    infowindow.marker = marker;
-    var innerHTML = '<div>';
-    if (place.name) {
-      innerHTML += '<strong>' + place.name + '</strong>';
-    }
-    if (place.formatted_address) {
-      innerHTML += '<br>' + place.formatted_address;
-    }
-    if (place.formatted_phone_number) {
-      innerHTML += '<br>' + place.formatted_phone_number;
-    }
-    if (place.opening_hours) {
-      innerHTML += '<br><br><strong>Hours:</strong><br>' +
-          place.opening_hours.weekday_text[0] + '<br>' +
-          place.opening_hours.weekday_text[1] + '<br>' +
-          place.opening_hours.weekday_text[2] + '<br>' +
-          place.opening_hours.weekday_text[3] + '<br>' +
-          place.opening_hours.weekday_text[4] + '<br>' +
-          place.opening_hours.weekday_text[5] + '<br>' +
-          place.opening_hours.weekday_text[6];
+  var service = new google.maps.places.PlacesService(map);
+  service.getDetails({
+    placeId: marker.id
+  }, function(place, status) {
+    if (status === google.maps.places.PlacesServiceStatus.OK) {
+      // Set the marker property on this infowindow so it isn't created again.
+      infowindow.marker = marker;
+      var innerHTML = '<div>';
+      if (place.name) {
+        innerHTML += '<strong>' + place.name + '</strong>';
+      }
+      if (place.formatted_address) {
+        innerHTML += '<br>' + place.formatted_address;
+      }
+      if (place.formatted_phone_number) {
+        innerHTML += '<br>' + place.formatted_phone_number;
+      }
+      if (place.opening_hours) {
+        innerHTML += '<br><br><strong>Hours:</strong><br>' +
+            place.opening_hours.weekday_text[0] + '<br>' +
+            place.opening_hours.weekday_text[1] + '<br>' +
+            place.opening_hours.weekday_text[2] + '<br>' +
+            place.opening_hours.weekday_text[3] + '<br>' +
+            place.opening_hours.weekday_text[4] + '<br>' +
+            place.opening_hours.weekday_text[5] + '<br>' +
+            place.opening_hours.weekday_text[6];
 
-          if (place.opening_hours.open_now) {
-            innerHTML += '<br><p>Open Now</p>';
-          } else {
-            innerHTML += '<br><p>Closed</p>';
-          }
+            if (place.opening_hours.open_now) {
+              innerHTML += '<br><p>Open Now</p>';
+            } else {
+              innerHTML += '<br><p>Closed</p>';
+            }
+      }
+      if (place.price_Level) {
+        innerHTML += '<br>' + place.price_Level;
+      }
+      if (place.rating) {
+        innerHTML += '<br>' + place.rating;
+      }
+      if (place.photos) {
+        innerHTML += '<br><br><img src="' + place.photos[0].getUrl(
+            {maxHeight: 100, maxWidth: 200}) + '">';
+      }
+      innerHTML += '</div>';
+      infowindow.setContent(innerHTML);
+      infowindow.open(map, marker);
+      // Make sure the marker property is cleared if the infowindow is closed.
+      infowindow.addListener('closeclick', function() {
+        infowindow.marker = null;
+      });
     }
-    if (place.price_Level) {
-      innerHTML += '<br>' + place.price_Level;
-    }
-    if (place.rating) {
-      innerHTML += '<br>' + place.rating;
-    }
-    if (place.photos) {
-      innerHTML += '<br><br><img src="' + place.photos[0].getUrl(
-          {maxHeight: 100, maxWidth: 200}) + '">';
-    }
-    innerHTML += '</div>';
-    infowindow.setContent(innerHTML);
-    infowindow.open(map, marker);
-    // Make sure the marker property is cleared if the infowindow is closed.
-    infowindow.addListener('closeclick', function() {
-      infowindow.marker = null;
-    });
-  }
-});
+  });
 }
