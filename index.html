@@ -50,14 +50,13 @@
           <span class="text">Open Now</span>
           <input id="open-now-checkbox" type="checkbox" name="name" value="" data-bind="checked: openNowIsChecked">
           <br>
-          <span class="text">Price Level</span>
-          <select id="price-filter">
-            <option value="null">None</option>
-            <option value=0>Free</option>
-            <option value=1>Inexpensive</option>
-            <option value=2>Moderate</option>
-            <option value=3>Expensive</option>
-            <option value=4>Very Expensive</option>
+          <span class="text">Rating above</span>
+          <select id="rating-filter" data-bind="value: selectedRating">
+            <option value=0>No preference</option>
+            <option value=1>1</option>
+            <option value=2>2</option>
+            <option value=3>3</option>
+            <option value=4>4</option>
           </select>
         </div>
         <div class="">

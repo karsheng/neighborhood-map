@@ -6,9 +6,14 @@ var Place = function() {
   this.marker = "";
   this.openNow = ko.observable(false);
   this.show = ko.observable(true);
+  this.rating = 0;
   // self.fullName = ko.computed(function() {
   //   return self.placeName() + " " + self.formattedAddress();
   // });
+};
+
+var intialPlaces = {
+
 };
 
 var ViewModel = function() {
@@ -23,30 +28,47 @@ var ViewModel = function() {
     getPlacesDetails(selectedPlace.marker, placeInfoWindow);
   };
 
-  // if the openNow checkbox is checked, the openNow function is triggered
+  // filter allows to show only currently open places and equal to or above selected ratings
   this.openNowIsChecked = ko.observable();
-  this.openNowIsChecked.subscribe(function(newValue){
-      this.showOpenNow(newValue);
+  this.selectedRating = ko.observable();
+
+  // when the Open Now checkbox is checked/unchecked, the filter function is run taking into account the selected rating
+  this.openNowIsChecked.subscribe(function(){
+    this.filter(self.openNowIsChecked(), self.selectedRating());
   }, this);
 
-  // triggered when the openNow checkbox is checked/unchecked
-  // when checked, hides the associated items and markers for the places that are currently closed
-  // when unchecked, shows all items and markers
-  this.showOpenNow = function(value) {
-    if (value) {
+  // when a rating is selected to be filtered, the filter function is run taking into account whether the
+  // open now checkbox is checked
+  this.selectedRating.subscribe(function(){
+    this.filter(self.openNowIsChecked(), self.selectedRating());
+  }, this);
+
+  //filters the results in placeList based on users input of Open Now checkbox and selected rating
+  this.filter = function(openNowChecked, selectedRating) {
+    // loop through each place results to see if it matches user's filter options
+    // and hide/show the results accordingly
+    if (openNowChecked) {
       ko.utils.arrayForEach(this.placeList(), function(place) {
-        if (!place.openNow()) {
+        if (place.openNow() && place.rating >= selectedRating) {
+          place.show(true);
+          showMarker(place.marker);
+        } else {
           place.show(false);
           hideMarker(place.marker);
         }
       });
     } else {
       ko.utils.arrayForEach(this.placeList(), function(place) {
-        place.show(true);
-        showMarker(place.marker);
+        if (place.rating >= selectedRating) {
+          place.show(true);
+          showMarker(place.marker);
+        } else {
+          place.show(false);
+          hideMarker(place.marker);
+        }
       });
     }
-  };
+  }
 };
 
 var model = new ViewModel();
@@ -608,6 +630,8 @@ function createMarkersForPlaces(places) {
     }
   }
   map.fitBounds(bounds);
+  // apply filter
+  // model.filter(model.openNowIsChecked(), model.selectedRating());
 }
 // get places names for list
 function getPlacesNames(marker, place) {
@@ -619,12 +643,15 @@ function getPlacesNames(marker, place) {
   if (place.formatted_address) {
     placeOfInterest.formattedAddress = place.formatted_address;
   }
-
   if (typeof openNow!== 'undefined') {
     if (openNow.open_now) {
         placeOfInterest.openNow(true);
     }
   }
+  if (place.rating) {
+    placeOfInterest.rating = place.rating;
+  }
+
   placeOfInterest.marker = marker;
 
   model.placeList.push(placeOfInterest);
