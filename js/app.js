@@ -370,6 +370,8 @@ function getPlacesNames(marker, infoWindow, place) {
 // executed when a marker is selected, indicating the user wants more
 // details about that place.
 function getPlacesDetails(marker, infowindow) {
+  // get places details from Google Maps API
+  var innerHTML = '<div id="place-details">';
   var service = new google.maps.places.PlacesService(map);
   service.getDetails({
     placeId: marker.id
@@ -377,7 +379,6 @@ function getPlacesDetails(marker, infowindow) {
     if (status === google.maps.places.PlacesServiceStatus.OK) {
       // Set the marker property on this infowindow so it isn't created again.
       infowindow.marker = marker;
-      var innerHTML = '<div>';
       if (place.name) {
         innerHTML += '<strong>' + place.name + '</strong>';
       }
@@ -418,9 +419,32 @@ function getPlacesDetails(marker, infowindow) {
       infowindow.open(map, marker);
       // Make sure the marker property is cleared if the infowindow is closed.
       infowindow.addListener('closeclick', function() {
-        infowindow.marker = null;
+      infowindow.marker = null;
       });
+    } else {
+      console.log(status);
     }
+  });
+
+  // Load Foursquare to get user check-ins count asynchronously
+  var lat = marker.position.lat();
+  var lng = marker.position.lng();
+  const CLIENT_ID = 'JIYGMSOKDZCP1QPVHIHQWZ3E1JIHFOQ2IAVV41W5ENUMHRT2';
+  const CLIENT_SECRET = 'P1VKASPXQRIFDNGB42XFA1QMSXSKDAXJ5FFCSJJSBEB44OH0' ;
+  var foursquareUrl = 'https://api.foursquare.com/v2/venues/search?client_id=' + CLIENT_ID + '&client_secret=' + CLIENT_SECRET + '&ll='+ lat +','+ lng +'&v=20130815&query=' + marker.title;
+
+  $.getJSON(foursquareUrl)
+    .done(function(data){
+      var venue = data.response.venues[0];
+      // append checkin count to infowindow if the venue is found
+      if (venue) {
+        var content = '<div id="foursquare-details"><br>Foursquare Check-Ins: ' + venue.stats.checkinsCount +'</div>';
+        $('#place-details').append(content);
+        var url = 'https://api.foursquare.com/v2/venues/' + venue.id + '/events';
+        console.log(url);
+      }
+  }).fail(function(e){
+      console.log(e);
   });
 }
 
