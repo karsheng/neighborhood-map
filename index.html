@@ -15,6 +15,8 @@
           <input id="go-places" type="button" value="Go">
         </div>
         <div>
+          <span class="text">Filter</span>
+          <input id="places-text-filter" type="text" placeholder="Type here to filter results" data-bind="value: textFilter, valueUpdate:'afterkeydown'">
           <span class="text">Open Now</span>
           <input id="open-now-checkbox" type="checkbox" name="name" value="" data-bind="checked: openNowIsChecked">
           <br>

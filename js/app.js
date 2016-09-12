@@ -74,27 +74,34 @@ var ViewModel = function() {
   };
 
   // filter allows to show only currently open places and equal to or above selected ratings
+  this.textFilter = ko.observable("");
   this.openNowIsChecked = ko.observable();
   this.selectedRating = ko.observable();
 
   // when the Open Now checkbox is checked/unchecked, the filter function is run taking into account the selected rating
   this.openNowIsChecked.subscribe(function(){
-    this.filter(self.openNowIsChecked(), self.selectedRating());
+    this.filter();
   }, this);
 
   // when a rating is selected to be filtered, the filter function is run taking into account whether the
   // open now checkbox is checked
   this.selectedRating.subscribe(function(){
-    this.filter(self.openNowIsChecked(), self.selectedRating());
+    this.filter();
   }, this);
 
+  this.textFilter.subscribe(function() {
+    this.filter();
+  }, this);
+
+
   //filters the results in placeList based on users input of Open Now checkbox and selected rating
-  this.filter = function(openNowChecked, selectedRating) {
+  this.filter = function() {
+    var filterText = self.textFilter().toLowerCase();
     // loop through each place results to see if it matches user's filter options
     // and hide/show the results accordingly
-    if (openNowChecked) {
-      ko.utils.arrayForEach(this.placeList(), function(place) {
-        if (place.openNow() && place.rating >= selectedRating) {
+    if (self.openNowIsChecked()) {
+      ko.utils.arrayForEach(self.placeList(), function(place) {
+        if (place.openNow() && place.rating >= self.selectedRating() && place.title.toLowerCase().indexOf(filterText) >= 0) {
           place.show(true);
           showMarker(place.marker);
         } else {
@@ -103,8 +110,8 @@ var ViewModel = function() {
         }
       });
     } else {
-      ko.utils.arrayForEach(this.placeList(), function(place) {
-        if (place.rating >= selectedRating) {
+      ko.utils.arrayForEach(self.placeList(), function(place) {
+        if (place.rating >= self.selectedRating() && place.title.toLowerCase().indexOf(filterText) >= 0) {
           place.show(true);
           showMarker(place.marker);
         } else {
@@ -113,7 +120,7 @@ var ViewModel = function() {
         }
       });
     }
-  }
+  };
 };
 
 var model = new ViewModel();
@@ -440,8 +447,6 @@ function getPlacesDetails(marker, infowindow) {
       if (venue) {
         var content = '<div id="foursquare-details"><br>Foursquare Check-Ins: ' + venue.stats.checkinsCount +'</div>';
         $('#place-details').append(content);
-        var url = 'https://api.foursquare.com/v2/venues/' + venue.id + '/events';
-        console.log(url);
       }
   }).fail(function(e){
       console.log(e);
