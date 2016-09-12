@@ -429,7 +429,13 @@ function getPlacesDetails(marker, infowindow) {
       infowindow.marker = null;
       });
     } else {
-      console.log(status);
+      innerHTML += 'Unable to retrieve details. Please try again later.</div>';
+      infowindow.setContent(innerHTML);
+      infowindow.open(map, marker);
+      // Make sure the marker property is cleared if the infowindow is closed.
+      infowindow.addListener('closeclick', function() {
+      infowindow.marker = null;
+      });
     }
   });
 
@@ -449,7 +455,7 @@ function getPlacesDetails(marker, infowindow) {
         $('#place-details').append(content);
       }
   }).fail(function(e){
-      console.log(e);
+      alert('Oops sorry! Something went wrong while we tried to retrieve information from Foursquare.');
   });
 }
 
