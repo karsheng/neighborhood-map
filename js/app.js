@@ -415,7 +415,7 @@ function getPlacesDetails(marker, infowindow) {
         innerHTML += '<br>' + place.price_Level;
       }
       if (place.rating) {
-        innerHTML += '<br>' + place.rating;
+        innerHTML += '<br> Rating: ' + place.rating;
       }
       if (place.photos) {
         innerHTML += '<br><br><img src="' + place.photos[0].getUrl(
@@ -466,3 +466,20 @@ function bounceMarker(marker, timeout) {
     marker.setAnimation(null)
   }, timeout);
 }
+
+/*
+ * Open the drawer when the menu ison is clicked.
+ */
+var menu = $('#menu');
+var main = $('main');
+var drawer = $('#drawer');
+
+menu.on('click', function(e) {
+  drawer.toggleClass('open');
+  menu.toggleClass('open');
+  e.stopPropagation();
+});
+main.on('click', function() {
+  drawer.removeClass('open');
+  menu.removeClass('open');
+});
