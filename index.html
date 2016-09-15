@@ -35,7 +35,7 @@
         <div class="">
           <h3>Results</h3>
           <ul id="place-list" data-bind="foreach: placeList">
-            <a href="" class="place-button"><li class="text" data-bind="text: title, click: $parent.placeListClicked, visible: show"></li></a>
+            <a href="" data-bind="visible: show" class="place-button"><li class="text" data-bind="text: title, click: $parent.placeListClicked"></li></a>
           </ul>
         </div>
       </nav>

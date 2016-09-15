@@ -141,12 +141,12 @@ ul#place-list {
 
 .place-button {
   display: block;
-  height: 35px;
+  min-height: 35px;
   width: calc(100% - 10px);
   text-decoration: none;
-  color: blue;
+  color: #525454;
 }
 
 .place-button:hover{
-  color: red;
+  background-color: #E5E5E5;
 }
