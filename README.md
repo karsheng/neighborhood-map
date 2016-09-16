@@ -14,5 +14,5 @@ Enjoy!
 
 #### Notes to reviewer
 1. Source code is stored in the `src` folder.
-1. Foursquare API is used to get check-ins count for places.
+1. Foursquare API is used to get check-in counts for places.
 1. **Open Now** and **Rating Above** filters will not work properly on the initial places which were hard-coded as these information change with time.
