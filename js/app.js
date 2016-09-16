@@ -8,6 +8,7 @@ var Place = function() {
   this.show = ko.observable(true);
   this.rating = 0;
   this.placeInfoWindow = "";
+  this.selected = ko.observable(false);
   // self.fullName = ko.computed(function() {
   //   return self.placeName() + " " + self.formattedAddress();
   // });
@@ -59,6 +60,7 @@ var initialPlaces = [
 
 var ViewModel = function() {
   var self = this;
+  this.currentlySelectedPlace = null;
 
   this.placeList = ko.observableArray([]);
 
@@ -68,11 +70,19 @@ var ViewModel = function() {
     if (selectedPlace.placeInfoWindow.marker == selectedPlace.marker) {
       console.log("This infowindow already is on this marker!");
     } else {
+      self.highlightSelectedPlace(selectedPlace);
       bounceMarker(selectedPlace.marker, 2000);
       getPlacesDetails(selectedPlace.marker, selectedPlace.placeInfoWindow);
     }
   };
 
+  this.markerClicked = function(marker) {
+    ko.utils.arrayForEach(self.placeList(), function(place) {
+      if (marker === place.marker) {
+        self.highlightSelectedPlace(place);
+      }
+    });
+  };
   // filter allows to show only currently open places and equal to or above selected ratings
   this.textFilter = ko.observable("");
   this.openNowIsChecked = ko.observable();
@@ -120,6 +130,15 @@ var ViewModel = function() {
         }
       });
     }
+  };
+
+  this.highlightSelectedPlace = function(selectedPlace) {
+    // highlight selected place
+    if (self.currentlySelectedPlace) {
+      self.currentlySelectedPlace.selected(false);
+    }
+    selectedPlace.selected(true);
+    self.currentlySelectedPlace = selectedPlace;
   };
 };
 
@@ -214,7 +233,6 @@ function initMap() {
   var searchBox = new google.maps.places.SearchBox(
       document.getElementById('places-search'));
   // Bias the searchbox to within the bounds of the map.
-  searchBox.setBounds(map.getBounds());
 
   // Listen for the event fired when the user selects a prediction from the
   // picklist and retrieve more details for that place.
@@ -228,17 +246,6 @@ function initMap() {
 
   createMarkersForPlaces(initialPlaces);
   showPlaces();
-}
-
-// This function will loop through the markers array and display them all.
-function showListings() {
-  var bounds = new google.maps.LatLngBounds();
-  // Extend the boundaries of the map for each marker and display the marker
-  for (var i = 0; i < markers.length; i++) {
-    markers[i].setMap(map);
-    bounds.extend(markers[i].position);
-  }
-  map.fitBounds(bounds);
 }
 
 // This function will loop through the initialPlaces array and display them all.
@@ -268,7 +275,7 @@ function showMarker(marker) {
 }
 
 // This function fires when the user selects a searchbox picklist item.
-// It will do a nearby search using the selected query string or place.
+// It will do a search using the selected query string or place.
 function searchBoxPlaces(searchBox) {
   hideMarkers(placeMarkers);
   var places = searchBox.getPlaces();
@@ -283,12 +290,10 @@ function searchBoxPlaces(searchBox) {
 // This function firest when the user select "go" on the places search.
 // It will do a nearby search using the entered query string or place.
 function textSearchPlaces() {
-  var bounds = map.getBounds();
   hideMarkers(placeMarkers);
   var placesService = new google.maps.places.PlacesService(map);
   placesService.textSearch({
     query: document.getElementById('places-search').value,
-    bounds: bounds
   }, function(results, status) {
     if (status === google.maps.places.PlacesServiceStatus.OK) {
       createMarkersForPlaces(results);
@@ -330,6 +335,7 @@ function createMarkersForPlaces(places) {
       if (placeInfoWindow.marker == this) {
         console.log("This infowindow already is on this marker!");
       } else {
+        model.markerClicked(this);
         bounceMarker(this, 2000);
         getPlacesDetails(this, placeInfoWindow);
       }
@@ -406,13 +412,10 @@ function getPlacesDetails(marker, infowindow) {
             place.opening_hours.weekday_text[6];
 
             if (place.opening_hours.open_now) {
-              innerHTML += '<br><p>Open Now</p>';
+              innerHTML += '<br><p><strong>Open Now</strong></p>';
             } else {
-              innerHTML += '<br><p>Closed</p>';
+              innerHTML += '<br><p><strong>Closed</strong></p>';
             }
-      }
-      if (place.price_Level) {
-        innerHTML += '<br>' + place.price_Level;
       }
       if (place.rating) {
         innerHTML += '<br> Rating: ' + place.rating;
