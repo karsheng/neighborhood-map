@@ -1,6 +1,6 @@
 ## Neighborhood Map
 
-This app allows you to search for any places of your interest and populate them on the map. You can get more information of the place e.g. full address, opening hours, rating, Foursquare check-ins etc. by clicking the name in the **Results** list or the icon on the map.
+This app allows you to search for any places of your interest and populate them on the map and list. You can get more information of the place e.g. full address, opening hours, Foursquare check-ins etc. by clicking the name in the **Results** list or the icon on the map.
 
 You can even filter the results too (by text, open now and rating)!  
 
