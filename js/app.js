@@ -1,6 +1,11 @@
+//
+//
 // Knockout Part
-var Place = function() {
+//
+//
 
+// The place object which stores the information of a place
+var Place = function() {
   this.title = ko.observable();
   this.formattedAddress = ko.observable();
   this.marker = "";
@@ -9,11 +14,11 @@ var Place = function() {
   this.rating = 0;
   this.placeInfoWindow = "";
   this.selected = ko.observable(false);
-  // self.fullName = ko.computed(function() {
-  //   return self.placeName() + " " + self.formattedAddress();
-  // });
 };
 
+// Initial places to be populated in the map.
+// NOTE: "Open Now" and "Rating above" filters do not work with these places as it is not practical to hard code these
+// these information.
 var initialPlaces = [
   {
     icon: "https://maps.gstatic.com/mapfiles/place_api/icons/restaurant-71.png",
@@ -60,13 +65,18 @@ var initialPlaces = [
 
 var ViewModel = function() {
   var self = this;
-  this.currentlySelectedPlace = null;
-
+  this.currentlySelectedPlace = null; //currentlySelectedPlace set to null initially and to be updated when user clicked a place item
   this.placeList = ko.observableArray([]);
 
+  // when the place item in the place list is clicked,
+  // the item (selectedPlace) will be highlighted and it's associated
+  // marker will be animated (bouncing) and the infowindow will be shown
+  // with details of the place.
   this.placeListClicked = function() {
     var order = self.placeList().indexOf(this);
     var selectedPlace = self.placeList()[order];
+
+    // prevents reopening of the infowindo if it's already open
     if (selectedPlace.placeInfoWindow.marker == selectedPlace.marker) {
       console.log("This infowindow already is on this marker!");
     } else {
@@ -76,6 +86,7 @@ var ViewModel = function() {
     }
   };
 
+  // when the marker is clicked, look for it's associated place item in the list view and highlight it
   this.markerClicked = function(marker) {
     ko.utils.arrayForEach(self.placeList(), function(place) {
       if (marker === place.marker) {
@@ -83,32 +94,34 @@ var ViewModel = function() {
       }
     });
   };
-  // filter allows to show only currently open places and equal to or above selected ratings
+
   this.textFilter = ko.observable("");
   this.openNowIsChecked = ko.observable();
   this.selectedRating = ko.observable();
 
-  // when the Open Now checkbox is checked/unchecked, the filter function is run taking into account the selected rating
+  // runs the filter function when the #open-now-checkbox is checked
   this.openNowIsChecked.subscribe(function(){
     this.filter();
   }, this);
 
-  // when a rating is selected to be filtered, the filter function is run taking into account whether the
-  // open now checkbox is checked
+  // runs the filter function when an option is selected in #rating-filter
   this.selectedRating.subscribe(function(){
     this.filter();
   }, this);
 
+  // runs the filter function when user enters a letter/text in the #places-text-filter box
   this.textFilter.subscribe(function() {
     this.filter();
   }, this);
 
 
-  //filters the results in placeList based on users input of Open Now checkbox and selected rating
+  //filters the results in placeList based on users input in #places-text-filter, #open-now-checkbox and #rating-filter
   this.filter = function() {
+
     var filterText = self.textFilter().toLowerCase();
+
     // loop through each place results to see if it matches user's filter options
-    // and hide/show the results accordingly
+    // and hide/show the place item and associated marker accordingly
     if (self.openNowIsChecked()) {
       ko.utils.arrayForEach(self.placeList(), function(place) {
         if (place.openNow() && place.rating >= self.selectedRating() && place.title.toLowerCase().indexOf(filterText) >= 0) {
@@ -132,21 +145,28 @@ var ViewModel = function() {
     }
   };
 
+  // highlight selected places in the list view
   this.highlightSelectedPlace = function(selectedPlace) {
-    // highlight selected place
+
+    // unhighlight any currentlySelectedPlace
     if (self.currentlySelectedPlace) {
       self.currentlySelectedPlace.selected(false);
     }
+    // highlight the newly selected place and set it as currentlySelectedPlace
     selectedPlace.selected(true);
     self.currentlySelectedPlace = selectedPlace;
   };
 };
 
+//initialize ViewModel and apply bindings
 var model = new ViewModel();
-
 ko.applyBindings(model);
 
+//
+//
 // Google Maps Part
+//
+//
 var map;
 
 // Create placemarkers array to use in multiple functions to have control
@@ -222,33 +242,34 @@ function initMap() {
     }
   ];
 
-  // Constructor creates a new map - only center and zoom are required.
+  // Constructor creates a new map
   map = new google.maps.Map(document.getElementById('map'), {
     center: {lat: 40.7413549, lng: -73.9980244},
     zoom: 13,
     styles: styles,
-    mapTypeControl: false // mapTypeControl - ROADMAP, SATELLITE, HYBRID
+    mapTypeControl: false
   });
 
   var searchBox = new google.maps.places.SearchBox(
-      document.getElementById('places-search'));
-  // Bias the searchbox to within the bounds of the map.
+    document.getElementById('places-search'));
 
-  // Listen for the event fired when the user selects a prediction from the
-  // picklist and retrieve more details for that place.
-  searchBox.addListener('places_changed', function() {
-    searchBoxPlaces(this);
-  });
+    // Listen for the event fired when the user selects a prediction from the
+    // picklist and retrieve more details for that place.
+    searchBox.addListener('places_changed', function() {
+      searchBoxPlaces(this);
+    });
 
   // Listen for the event fired when the user selects a prediction and clicks
   // "go" more details for that place.
   document.getElementById('go-places').addEventListener('click', textSearchPlaces);
 
+  //create markers for the hardcoded initial places
   createMarkersForPlaces(initialPlaces);
+  //show the places on the map
   showPlaces();
 }
 
-// This function will loop through the initialPlaces array and display them all.
+// This function will loop through the placeMarkers array and display them all.
 function showPlaces() {
   var bounds = new google.maps.LatLngBounds();
   // Extend the boundaries of the map for each marker and display the marker
@@ -265,7 +286,7 @@ function hideMarkers(markers) {
     markers[i].setMap(null);
   }
 }
-// this function hides a marker
+// this function hides a marker from the map
 function hideMarker(marker) {
   marker.setMap(null);
 }
@@ -279,10 +300,10 @@ function showMarker(marker) {
 function searchBoxPlaces(searchBox) {
   hideMarkers(placeMarkers);
   var places = searchBox.getPlaces();
-  if (places.length == 0) {
+  if (places.length === 0) {
     window.alert('We did not find any places matching that search!');
   } else {
-  // For each place, get the icon, name and location.
+  // For each place, get the details and create marker for it
     createMarkersForPlaces(places);
   }
 }
@@ -296,6 +317,7 @@ function textSearchPlaces() {
     query: document.getElementById('places-search').value,
   }, function(results, status) {
     if (status === google.maps.places.PlacesServiceStatus.OK) {
+      // For each place, get the details and create marker for it
       createMarkersForPlaces(results);
     }
   });
@@ -327,14 +349,15 @@ function createMarkersForPlaces(places) {
       id: place.place_id
     });
 
-    //get places names for listview
-    getPlacesNames(marker, placeInfoWindow, place);
+    // get place information and store the info and marker for later use
+    storePlaceInfo(marker, placeInfoWindow, place);
 
-    // If a marker is clicked, do a place details search on it in the next function.
+    // If a marker is clicked, do a place details search on it
     marker.addListener('click', function() {
       if (placeInfoWindow.marker == this) {
         console.log("This infowindow already is on this marker!");
       } else {
+        // runs the
         model.markerClicked(this);
         bounceMarker(this, 2000);
         getPlacesDetails(this, placeInfoWindow);
@@ -351,32 +374,31 @@ function createMarkersForPlaces(places) {
     }
   }
   map.fitBounds(bounds);
-  // apply filter
-  // model.filter(model.openNowIsChecked(), model.selectedRating());
+  // apply filter (if any)
+  model.filter();
 }
-// get places names for list
-function getPlacesNames(marker, infoWindow, place) {
+// get place info and store the info and it's the associated marker and infoWindow in the model ViewModel
+function storePlaceInfo(marker, infoWindow, place) {
+  //create new instance of Place
   var placeOfInterest = new Place();
-  var openNow = place.opening_hours;
+  var openingHours = place.opening_hours;
   if (place.name) {
     placeOfInterest.title = place.name;
   }
   if (place.formatted_address) {
     placeOfInterest.formattedAddress = place.formatted_address;
   }
-  if (typeof openNow !== 'undefined') {
-    if (openNow.open_now) {
+  if (typeof openingHours !== 'undefined') {
+    if (openingHours.open_now) {
         placeOfInterest.openNow(true);
     }
   }
   if (place.rating) {
     placeOfInterest.rating = place.rating;
   }
-
   placeOfInterest.placeInfoWindow = infoWindow;
   placeOfInterest.marker = marker;
   model.placeList.push(placeOfInterest);
-
 }
 
 // This is the PLACE DETAILS search - it's the most detailed so it's only
@@ -466,13 +488,11 @@ function getPlacesDetails(marker, infowindow) {
 function bounceMarker(marker, timeout) {
   marker.setAnimation(google.maps.Animation.BOUNCE);
   window.setTimeout(function() {
-    marker.setAnimation(null)
+    marker.setAnimation(null);
   }, timeout);
 }
 
-/*
- * Open the drawer when the menu ison is clicked.
- */
+//Open/close the drawer when the menu icon is clicked.
 var menu = $('#menu');
 var main = $('main');
 var drawer = $('#drawer');
@@ -482,6 +502,7 @@ menu.on('click', function(e) {
   menu.toggleClass('open');
   e.stopPropagation();
 });
+// close the drawer when main is clicked
 main.on('click', function() {
   drawer.removeClass('open');
   menu.removeClass('open');

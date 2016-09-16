@@ -10,13 +10,13 @@
       <nav id="drawer" class="options-box">
         <h1>Neighborhood Map</h1>
         <hr>
-        <div>
+        <section id="search">
           <h3>Search for any places</h3>
           <input id="places-search" type="text" placeholder="Ex: Pizza delivery in NYC">
           <input id="go-places" type="button" value="Go">
-        </div>
+        </section>
         <hr>
-        <div>
+        <section id="filter">
           <h3>Filter</h3>
           <input id="places-text-filter" type="text" placeholder="Type here to filter results" data-bind="value: textFilter, valueUpdate:'afterkeydown'">
           <span class="text">Open Now</span>
@@ -30,14 +30,14 @@
             <option value=3>3</option>
             <option value=4>4</option>
           </select>
-        </div>
+        </section>
         <hr>
-        <div class="">
+        <section id="results">
           <h3>Results</h3>
           <ul id="place-list" data-bind="foreach: placeList">
             <a href="" data-bind="visible: show, css:{'selected': selected}" class="place-button"><li class="text" data-bind="text: title, click: $parent.placeListClicked"></li></a>
           </ul>
-        </div>
+        </section>
       </nav>
       <main>
         <header>
